@@ -1,103 +1,145 @@
-# Bitcoin Time-Series Forecasting with RNN, LSTM and GRU
+<div align="center">
 
-Türkçe açıklamalı bir Jupyter Notebook: Bitcoin saatlik fiyat verisi üzerinde tekrarlayan sinir ağlarını karşılaştırır ve tahmin sonuçlarını zaman serisi doğrulama yöntemleriyle inceler.
+<img src="assets/bitcoin-forecasting-banner.svg" alt="Bitcoin Time-Series Research Lab" width="100%"/>
 
-> **Not:** Bu proje eğitim ve araştırma amaçlıdır; yatırım tavsiyesi değildir. Geçmiş veride iyi görünen sonuçlar gelecekteki performansı garanti etmez.
+# Bitcoin Time-Series Forecasting
+### SimpleRNN · LSTM · GRU · Multivariate Features · Walk-Forward Validation
 
-## Proje amacı
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ozgurisikdamar/Bitcoin-Timeseries-RNN-LSTM-GRU/blob/main/bitcoin-timeseries-rnn-lstm-gru.ipynb)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-Keras-FF6F00?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
+[![Notebook](https://img.shields.io/badge/Format-Jupyter-F37626?logo=jupyter&logoColor=white)](https://jupyter.org/)
+[![Status](https://img.shields.io/badge/Status-Research%20%26%20Learning-8B5CF6)](#project-status)
 
-Bu çalışmanın amacı yalnızca düşük tahmin hatası elde etmek değil; modelleri adil bir baseline ile karşılaştırmak, zaman sıralamasını korumak, tahminleri doğru zaman damgalarıyla eşleştirmek ve basit bir strateji simülasyonunun sınırlarını incelemektir.
+**A step-by-step investigation into recurrent neural networks for Bitcoin time-series forecasting — with baselines, careful time alignment, and evaluation that goes beyond a single error score.**
 
-## Notebook içeriği
+[Explore the notebook](bitcoin-timeseries-rnn-lstm-gru.ipynb) · [Dataset](https://www.kaggle.com/datasets/mczielinski/bitcoin-historical-data) · [Open in Google Colab](https://colab.research.google.com/github/Ozgurisikdamar/Bitcoin-Timeseries-RNN-LSTM-GRU/blob/main/bitcoin-timeseries-rnn-lstm-gru.ipynb)
 
-1. **Ortamı hazırlama** — Gerekli Python paketleri ve çalışma ortamı.
-2. **Veriyi alma** — KaggleHub üzerinden veri indirme; gerekirse CSV'yi elle yükleme.
-3. **Veri temizliği ve saatlik OHLCV** — Zaman damgalarını ve sütunları kontrol etme, saatlik seriyi hazırlama.
-4. **Tahmin problemini tanımlama** — Geçmiş pencere ve kronolojik eğitim/test ayrımı.
-5. **Baseline** — Son gözlenen fiyatı bir sonraki fiyat olarak kullanma.
-6. **SimpleRNN, LSTM ve GRU** — Tek değişkenli modelleri karşılaştırma.
-7. **Sonuçların yorumlanması** — Çıktıları ve baseline farkını değerlendirme.
-8. **Log getiri ile modelleme** — Fiyat seviyesinden log getiri hedefine geçiş.
-9. **Log getiri deneyinin değerlendirilmesi** — Tahminleri fiyat ölçeğine ve zaman indeksine geri eşleme.
-10. **Çok değişkenli GRU ve özellik mühendisliği** — Getiri, volatilite ve teknik göstergeler gibi girdiler.
-11. **Çok değişkenli model sonuçları** — Ortak test örneklerinde karşılaştırma.
-12. **Backtest ve portföy analizi** — Basit sinyal stratejisi, işlem maliyeti varsayımları ve performans metrikleri.
-13. **Walk-forward doğrulama ve kalite kapıları** — Zaman içinde ilerleyen test blokları, güçlü baseline'lar, GRU doğrulaması ve temel tutarlılık kontrolleri.
+</div>
 
-Her ana bölümün öncesinde, önceki aşamada ne öğrenildiğini ve sonraki aşamanın neden gerekli olduğunu açıklayan bir geçiş notu bulunur.
+> **Research project, not financial advice.** No profitability claim is made. Results depend on the data, environment, model configuration, and execution assumptions; rerun the notebook to reproduce metrics and charts.
 
-## Başlarken
+---
 
-### Google Colab ile
+## The research journey
 
-1. Bu depodaki `bitcoin-timeseries-rnn-lstm-gru.ipynb` dosyasını aç.
-2. Notebook'u Google Colab'a yükle veya GitHub önizlemesindeki **Open in Colab** bağlantısını kullan (bağlantı eklenmişse).
-3. Hücreleri yukarıdan aşağıya sırayla çalıştır. Tüm notebook için Colab menüsünden **Runtime → Run all** seçeneğini kullanabilirsin.
-4. KaggleHub indirmesi ortamda kimlik doğrulaması isterse, veri indirme hücresinin açıklamasındaki manuel CSV yükleme alternatifini kullan.
+The notebook follows a deliberate progression: start with a simple reference point, test recurrent architectures, change the target representation, add features, and then make the evaluation more demanding.
 
-### Yerel ortamda
+<img src="assets/research-pipeline.svg" alt="Research pipeline: historical Bitcoin data, chronological split, feature engineering, recurrent models, and walk-forward evaluation" width="100%"/>
 
-Python 3.10 veya 3.11 önerilir. Sanal ortam oluşturup paketleri kur:
+## Why this project?
+
+A low prediction error alone does not prove that a model learned a useful signal — and it certainly does not prove a trading strategy is profitable. This project explores the questions in order:
+
+- Can recurrent neural networks improve on simple forecasting baselines?
+- Does modelling log returns tell a different story from modelling price levels?
+- Do multivariate features help on the same evaluation timestamps?
+- Do results persist across multiple chronological test windows?
+- What changes when transaction costs and execution assumptions are considered?
+
+## Notebook roadmap
+
+| Stage | What happens | Why it matters |
+|---|---|---|
+| **01–04 · Data & problem setup** | Environment, data download, hourly OHLCV preparation, chronological split and lookback windows | Establishes a consistent forecasting problem without random time-series shuffling |
+| **05 · Baseline** | Last-observed-price reference forecast | Gives neural networks a meaningful benchmark to beat |
+| **06–07 · Recurrent models** | SimpleRNN, LSTM and GRU training and comparison | Tests model families against the baseline |
+| **08–09 · Log returns** | Predict log returns and map predictions back to price/time | Examines an alternative target representation and alignment |
+| **10–11 · Multivariate GRU** | Add engineered signals and evaluate on shared test timestamps | Tests whether extra inputs add measurable value |
+| **12 · Backtesting** | Simulated signals, portfolio metrics and trading assumptions | Separates forecast quality from strategy outcomes |
+| **13 · Walk-forward & quality gates** | Rolling chronological evaluation, stronger baselines and consistency checks | Tests whether conclusions depend on one particular split |
+
+Each major stage includes a transition note explaining what was learned, what remains uncertain, and why the next experiment follows.
+
+## Quick start
+
+### Option A — Google Colab (recommended)
+
+1. Click the **Open in Colab** badge at the top.
+2. Run the notebook from the first cell in order.
+3. Follow the data-loading cell instructions. If KaggleHub authentication is unavailable, use the notebook's documented CSV upload alternative.
+4. Re-run the notebook to generate current outputs; saved output cells are intentionally not treated as authoritative results.
+
+### Option B — Run locally
+
+Python 3.10 or 3.11 is recommended. From a terminal in the repository:
 
 ```bash
 python -m venv .venv
 ```
 
-Windows Git Bash üzerinde sanal ortamı etkinleştir:
+Activate the environment:
 
 ```bash
+# Windows PowerShell
+.venv\\Scripts\\Activate.ps1
+
+# Windows Git Bash
 source .venv/Scripts/activate
-```
 
-Linux/macOS üzerinde:
-
-```bash
+# Linux / macOS
 source .venv/bin/activate
 ```
 
-Paketleri kur:
+Install dependencies and launch Jupyter:
 
 ```bash
+python -m pip install --upgrade pip
 pip install -r requirements.txt
-```
-
-Jupyter Notebook'u başlat:
-
-```bash
 jupyter notebook
 ```
 
-Notebook Colab odaklı `/content` yollarını da desteklediğinden, yerel ortamda veri yolu veya Kaggle erişimi gerektiğinde ilgili hücreleri kontrol et.
+> The notebook was designed with Google Colab in mind and may use Colab-specific paths. If running locally, check the data path and Kaggle access instructions in the relevant cells.
 
-## Veri
+## Data source
 
-Varsayılan veri kaynağı Kaggle'daki [`mczielinski/bitcoin-historical-data`](https://www.kaggle.com/datasets/mczielinski/bitcoin-historical-data) veri setidir. Veri setinin sürümü ve kapsamı zaman içinde değişebilir. Alternatif olarak, notebook'un beklediği zaman damgası ve kapanış fiyatı sütunlarını içeren uyumlu bir CSV kullanılabilir. Notebook, mevcut veri dosyalarını bulmaya ve sütun adlarındaki olası farklılıkları ele almaya çalışır.
+Default dataset: [Bitcoin Historical Data on Kaggle](https://www.kaggle.com/datasets/mczielinski/bitcoin-historical-data) (<code>mczielinski/bitcoin-historical-data</code>).
 
-## Yöntem ve değerlendirme
+Dataset versions and coverage may change over time. Do not commit API tokens, Kaggle credentials, or private data to this repository. If using a compatible CSV, check that its timestamp and price columns match the notebook's expected schema.
 
-- Veri kronolojik sırada ele alınır; gelecek bilgisi geçmişe taşınmamalıdır.
-- Ölçekleyiciler yalnızca ilgili eğitim bölümünde fit edilmelidir.
-- Modeller, mümkün olduğunda aynı test zaman damgaları üzerinde karşılaştırılır.
-- Baseline karşılaştırması, yalnızca sinir ağları arasındaki sıralamaya bakmaktan daha anlamlıdır.
-- Walk-forward testleri, sonuçların tek bir test dönemine bağımlılığını azaltmaya yardımcı olur.
-- Backtest çıktıları işlem maliyetleri, kayma, sinyalin uygulanma zamanı ve piyasa varsayımlarına duyarlıdır.
+## Evaluation principles
 
-**Sınırlar:** Notebook'taki kontroller bir araştırma başlangıç noktasıdır; profesyonel işlem altyapısı, kapsamlı istatistiksel anlamlılık testi veya canlı piyasa doğrulaması yerine geçmez. Sonuçlar çalıştırma anındaki veri ve yazılım sürümlerine göre değişebilir. Bu depodaki notebook çıktıları temizlenmiştir; grafikler ve metrikler yeniden çalıştırıldığında üretilir.
+- **Chronological integrity:** training data must precede validation/test data.
+- **Train-only preprocessing:** fit scalers on the relevant training segment, not on future observations.
+- **Comparable test points:** compare models on matching timestamps and target definitions.
+- **Baselines first:** a complex model is useful only if it adds value over simpler alternatives.
+- **Walk-forward evaluation:** repeat testing across successive time windows rather than trusting one split.
+- **Trading realism:** fees, slippage, signal timing, position changes and benchmark choice can materially change backtest outcomes.
+- **Honest reporting:** figures and metrics should come from a real notebook run; illustrative diagrams are conceptual, not experimental results.
 
-## Teknolojiler
+## Technology stack
 
-- Python
-- pandas, NumPy
-- TensorFlow / Keras
-- scikit-learn
-- Matplotlib
-- KaggleHub
-- Jupyter Notebook / Google Colab
+<div align="center">
 
-## Proje durumu
+| Data & analysis | Deep learning | Experiment interface |
+|:---:|:---:|:---:|
+| pandas · NumPy | TensorFlow · Keras | Jupyter Notebook |
+| scikit-learn | SimpleRNN · LSTM · GRU | Google Colab |
+| Matplotlib | Feature engineering | KaggleHub |
 
-Bu sürüm; temel RNN ailesi karşılaştırmasını, log getiri yaklaşımını, çok değişkenli GRU deneyini, basit backtest'i ve walk-forward doğrulama adımlarını bir araya getirir. Sonraki iyileştirme alanları; daha geniş walk-forward dönemleri, çoklu rastgelelik tohumları, işlem maliyeti duyarlılık analizi, piyasa rejimlerine göre hata analizi ve deney konfigürasyonlarının kaydedilmesidir.
+</div>
 
-## Lisans
+## Repository contents
 
-Henüz bir lisans belirtilmemiştir. Açık kaynak lisansı eklemeden önce paylaşım ve yeniden kullanım koşullarını belirle.
+- <code>bitcoin-timeseries-rnn-lstm-gru.ipynb</code> — main notebook with Turkish explanations and experiments.
+- <code>assets/bitcoin-forecasting-banner.svg</code> — project header artwork.
+- <code>assets/research-pipeline.svg</code> — conceptual overview of the research flow.
+- <code>requirements.txt</code> — Python dependencies.
+- <code>.gitignore</code> — excludes local/generated files that should not be versioned.
+
+## Project status & limitations
+
+This is an educational research workflow, not a production trading system. The included validation checks are a starting point, not proof of statistical significance, live-market robustness, or future profitability. Model performance can vary with the data version, random seed, library versions, and market regime.
+
+Potential next experiments:
+
+- repeat training with multiple random seeds and report variability;
+- extend walk-forward folds and compare more statistical baselines;
+- run feature ablations to measure each engineered input's contribution;
+- test sensitivity to transaction costs and slippage;
+- analyse errors by market regime;
+- record dataset versions and experiment configurations for reproducibility.
+
+## License
+
+No license is currently specified. Until a license is added, standard copyright applies; reuse permissions are not implied.
