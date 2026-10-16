@@ -142,4 +142,4 @@ Potential next experiments:
 
 ## License
 
-No license is currently specified. Until a license is added, standard copyright applies; reuse permissions are not implied.
+This project is licensed under the [MIT License](LICENSE). You may use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the project, subject to retaining the copyright and permission notice. See the [full license text](LICENSE) for details.
